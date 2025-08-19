@@ -2,9 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { motion, AnimatePresence } from "framer-motion";
 import Papa from "papaparse";
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#AA336A", "#33AA99"];
+const CATEGORY_COLORS = {
+  Food: "#FF6384",
+  Rent: "#36A2EB",
+  Transport: "#FFCE56",
+  Entertainment: "#AA336A",
+  Salary: "#33AA99",
+  Other: "#FF8042",
+};
 
 export default function Home() {
   const [transactions, setTransactions] = useState([]);
@@ -13,7 +21,7 @@ export default function Home() {
   const [category, setCategory] = useState("Other");
   const [darkMode, setDarkMode] = useState(false);
 
-  // Load data after mount to prevent hydration errors
+  // Load from LocalStorage
   useEffect(() => {
     const savedTransactions = localStorage.getItem("transactions");
     if (savedTransactions) setTransactions(JSON.parse(savedTransactions));
@@ -90,7 +98,7 @@ export default function Home() {
     <main className={`${darkMode ? "bg-gray-900 text-white" : "bg-gray-50 text-black"} min-h-screen`}>
       {/* Header */}
       <header className="bg-gradient-to-r from-blue-500 to-indigo-600 shadow-md">
-        <div className="max-w-3xl mx-auto px-4 py-6 flex justify-between items-center">
+        <div className="max-w-md sm:max-w-3xl mx-auto px-4 py-6 flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-extrabold text-white">💰 Expense Tracker</h1>
             <p className="text-blue-100 mt-1">Track your spending effortlessly</p>
@@ -105,32 +113,32 @@ export default function Home() {
       </header>
 
       {/* Content */}
-      <section className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+      <section className="max-w-md sm:max-w-3xl mx-auto px-4 py-6 space-y-6">
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="p-5 rounded-2xl bg-gradient-to-r from-green-100 to-green-200 shadow-lg transform transition hover:scale-105">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <motion.div className="p-5 rounded-2xl bg-gradient-to-r from-green-100 to-green-200 shadow-lg transform transition hover:scale-105">
             <p className="text-sm text-gray-600">Income</p>
             <p className="text-2xl font-bold text-green-700">R {income.toFixed(2)}</p>
-          </div>
-          <div className="p-5 rounded-2xl bg-gradient-to-r from-red-100 to-red-200 shadow-lg transform transition hover:scale-105">
+          </motion.div>
+          <motion.div className="p-5 rounded-2xl bg-gradient-to-r from-red-100 to-red-200 shadow-lg transform transition hover:scale-105">
             <p className="text-sm text-gray-600">Expenses</p>
             <p className="text-2xl font-bold text-red-700">R {Math.abs(expenses).toFixed(2)}</p>
-          </div>
-          <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-100 to-blue-200 shadow-lg transform transition hover:scale-105">
+          </motion.div>
+          <motion.div className="p-5 rounded-2xl bg-gradient-to-r from-blue-100 to-blue-200 shadow-lg transform transition hover:scale-105">
             <p className="text-sm text-gray-600">Balance</p>
             <p className="text-2xl font-bold">R {balance.toFixed(2)}</p>
-          </div>
+          </motion.div>
         </div>
 
         {/* Export / Import */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button
             onClick={handleExportCSV}
-            className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition"
+            className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition flex-1"
           >
             Export CSV
           </button>
-          <label className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 cursor-pointer transition">
+          <label className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 cursor-pointer transition flex-1 text-center">
             Import CSV
             <input type="file" accept=".csv" onChange={handleImportCSV} className="hidden" />
           </label>
@@ -173,49 +181,64 @@ export default function Home() {
         </div>
 
         {/* Transactions List */}
-        <div className="space-y-3 mt-4">
-          {transactions.map((tx, i) => (
-            <div
-              key={i}
-              className="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded-xl shadow hover:scale-105 transform transition"
-            >
-              <div>
-                <p className="font-semibold">{tx.description}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-300">{tx.category}</p>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className={tx.amount < 0 ? "text-red-500 font-bold" : "text-green-500 font-bold"}>
-                  R {tx.amount.toFixed(2)}
-                </span>
-                <button onClick={() => handleDeleteTransaction(i)} className="text-red-500 hover:text-red-700">
-                  ❌
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <AnimatePresence>
+          <div className="space-y-3 mt-4 max-h-96 overflow-y-auto">
+            {transactions.map((tx, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: 100 }}
+                transition={{ duration: 0.3 }}
+                className="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded-xl shadow hover:scale-105 transform transition"
+              >
+                <div>
+                  <p className="font-semibold">{tx.description}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-300">{tx.category}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className={tx.amount < 0 ? "text-red-500 font-bold" : "text-green-500 font-bold"}>
+                    R {tx.amount.toFixed(2)}
+                  </span>
+                  <button
+                    onClick={() => handleDeleteTransaction(i)}
+                    className="text-red-500 hover:text-red-700 p-2 rounded-lg"
+                  >
+                    ❌
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </AnimatePresence>
 
         {/* Pie Chart */}
         {chartData.length > 0 && (
-          <div className="rounded-2xl bg-gradient-to-r from-indigo-100 to-indigo-200 p-4 shadow mt-6">
+          <motion.div
+            className="rounded-2xl bg-gradient-to-r from-indigo-100 to-indigo-200 p-4 shadow mt-6"
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+          >
             <h2 className="font-semibold mb-4 text-gray-800">Expenses by Category</h2>
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  {chartData.map((entry) => (
+                    <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] || "#8884d8"} />
                   ))}
                 </Pie>
                 <Tooltip />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
-          </div>
+          </motion.div>
         )}
       </section>
     </main>
   );
 }
+
+
 
 
 
